@@ -14,7 +14,12 @@ pipeline {
 
         stage('Run Tests with Coverage') {
             steps {
-                sh 'npm test -- --coverage --watchAll=false'
+                sh '''
+                
+                   CI=true npm test -- --coverage --watchAll=false
+                   ls -l coverage/lcov.info
+                
+                '''
             }
         }
 
