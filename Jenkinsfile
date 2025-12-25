@@ -20,7 +20,7 @@ pipeline {
 
         stage('SonarQube Cloud Analysis') {
             environment {
-                SONAR_TOKEN = credentials('sonarcloud-token')
+                SONAR_TOKEN = credentials('SONAR_JENKINS_NEW_UCAAS')
             }
             steps {
                 withSonarQubeEnv('SonarCloud') {
