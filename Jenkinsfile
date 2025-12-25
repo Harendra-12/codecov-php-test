@@ -1,45 +1,70 @@
 pipeline {
     agent any
-
-    tools {
-        nodejs 'NodeJS'
-    }
-
+    
     stages {
-        stage('Install Dependencies') {
+        stage('Print Hello') {
             steps {
-                sh 'npm install'
+                echo 'Hello'
             }
         }
-
-        stage('Run Tests with Coverage') {
+        
+        stage('Your Build Stage') {
             steps {
-                sh '''
-                
-                   CI=true npm test -- --coverage --watchAll=false
-                   ls -l coverage/lcov.info
-                
-                '''
+                // Your actual build commands here
+                echo 'Building application...'
+                // Example: sh 'mvn clean install'
             }
         }
-
-        stage('SonarQube Cloud Analysis') {
-            environment {
-                SONAR_TOKEN = credentials('SONAR_JENKINS_NEW_UCAAS')
-            }
+        
+        stage('Your Test Stage') {
             steps {
-                withSonarQubeEnv('SonarCloud') {
-                    sh '''
-                      sonar-scanner \
-                        -Dsonar.projectKey=Harendra-12_codecov-php-test \
-                        -Dsonar.organization=harendra-12 \
-                        -Dsonar.sources=src \
-                        -Dsonar.exclusions=**/node_modules/**,**/coverage/** \
-                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                        -Dsonar.host.url=https://sonarcloud.io \
-                        -Dsonar.login=$SONAR_JENKINS_NEW_UCAAS
-                    '''
-                }
+                // Your test commands here
+                echo 'Running tests...'
+                // Example: sh 'mvn test'
+            }
+        }
+    }
+    
+    post {
+        success {
+            script {
+                echo 'Build succeeded! Sending success notification...'
+                snsPublish(
+                    topicArn: 'arn:aws:sns:us-east-1:940321698187:Auto-Scaling',
+                    subject: "✅ Jenkins Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    message: """
+Build Status: SUCCESS ✅
+
+Project: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+Build URL: ${env.BUILD_URL}
+Duration: ${currentBuild.durationString}
+
+Hello! Your build completed successfully.
+                    """
+                )
+            }
+        }
+        
+        failure {
+            script {
+                echo 'Build failed! Sending failure notification...'
+                snsPublish(
+                    topicArn: 'arn:aws:sns:us-east-1:940321698187:Auto-Scaling',
+                    subject: "❌ Jenkins Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    message: """
+Build Status: FAILED ❌
+
+Project: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+Build URL: ${env.BUILD_URL}
+Duration: ${currentBuild.durationString}
+
+Hello! Your build has failed. Please check the console output for details.
+
+Console Output: ${env.BUILD_URL}console
+                    """
+                )
             }
         }
     }
